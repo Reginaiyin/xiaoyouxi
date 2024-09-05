@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>答题小游戏</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-image: radial-gradient(circle, #fbc2eb, #a6c1ee);
+            background-size: cover;
+            text-align: center;
+            padding: 50px;
+            color: #fff;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #ffebee;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+
+            h1:after {
+                content: '';
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                width: 60px;
+                height: 10px;
+                background-color: #fff;
+                transform: translateX(-50%);
+                border-radius: 50%;
+                box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            }
+
+        #question-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 30px 10px 30px 10px; /* 不规则边框 */
+            padding: 30px;
+            box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+            color: #333;
+            position: relative;
+            border: 5px solid #ffd1dc;
+        }
+
+            #question-container:before, #question-container:after {
+                content: '';
+                position: absolute;
+                width: 100px;
+                height: 100px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+                z-index: -1;
+            }
+
+            #question-container:before {
+                top: -30px;
+                left: -30px;
+                border: 3px dashed #ffd1dc; /* 点线组合 */
+            }
+
+            #question-container:after {
+                bottom: -30px;
+                right: -30px;
+                border: 3px dashed #a6c1ee; /* 点线组合 */
+            }
+
+        #answer-container {
+            background-color: rgba(255, 240, 240, 0.9);
+            border-radius: 20px 40px 20px 40px; /* 不规则边框 */
+            padding: 30px;
+            box-shadow: 0px 0px 20px rgba(255, 0, 100, 0.3);
+            display: none;
+            margin-bottom: 20px;
+            color: #333;
+            border: 4px dotted #ff6b81;
+        }
+
+        button {
+            background-color: #ff6b81;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 18px;
+            margin: 10px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0px 0px 15px rgba(255, 105, 135, 0.5);
+        }
+
+            button:hover {
+                background-color: #ff4757;
+                transform: scale(1.1);
+            }
+
+            button:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+
+        .option {
+            border: 3px solid #fff;
+            border-radius: 25px 5px 25px 5px; /* 不规则边框 */
+            padding: 15px;
+            margin: 15px;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #ffddcc;
+            color: #333;
+            font-size: 18px;
+            box-shadow: 0 0 10px rgba(255, 200, 200, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+            .option:hover {
+                background-color: #ffe0b2;
+                border-color: #feb47b;
+            }
+
+            .option::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: rgba(255, 255, 255, 0.3);
+                transform: skewX(-45deg);
+                transition: 0.5s;
+            }
+
+            .option:hover::before {
+                left: 100%;
+            }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        .option input:checked + label {
+            border-color: #ff7e5f;
+            background-color: #ffd5d5;
+            font-weight: bold;
+        }
+
+        label {
+            cursor: pointer;
+        }
+
+        #trophy-img {
+            display: none;
+            max-width: 250px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>答题小游戏</h1>
+    <div id="question-container"></div>
+    <button id="submit-button" disabled>提交</button>
+    <button id="next-button" disabled>下一题</button>
+    <div id="answer-container"></div>
+    <div id="trophy-container">
+        <img id="trophy-img" src="trophy.jpg" alt="Trophy">
+    </div>
+
+    <script>
+        let questions = [
+            {
+                question: "巴氏灭菌法的发明人是？",
+                options: ["A.巴斯德", "B.列文虎克", "C.汤飞凡", "D.达尔文"],
+                answer: "A",
+                explanation: "巴氏灭菌法由路易·巴斯德发明。巴氏灭菌法的原理是将食品加热到60℃-100℃的温度，保持一定时间，以达到杀死细菌的目的。这种方法适用于各种液态食品，如牛奶、果汁等。"
+            },
+            {
+                question: "下列哪种微生物不是真菌？",
+                options: ["A.酵母菌", "B.乳酸菌", "C.青霉菌", "D.香菇"],
+                answer: "B",
+                explanation: "乳酸菌是一类细菌，不是真菌。它们可以在无氧或微氧环境下发酵，产生乳酸和其他有机酸，是一些发酵食品的重要菌种。"
+            },
+            {
+                question: "以下没有细胞结构的是？",
+                options: ["A.细菌", "B.真菌", "C.霉菌", "D.病毒"],
+                answer: "D",
+                explanation: "病毒是一类非细胞生物，只能在寄生于宿主细胞内进行生存和繁殖。"
+            },
+            {
+                question: "新型冠状病毒肺炎预防措施不包括？",
+                options: ["A.不佩戴口罩出门", "B.勤洗手", "C.避免去人流密集场所", "D.拒绝野味"],
+                answer: "A",
+                explanation: "预防措施包括佩戴口罩、勤洗手等。"
+            },
+            {
+                question: "以下哪种医药用品不常用来杀灭细菌？",
+                options: ["A.抗生素", "B.无水酒精", "C.75%乙醇", "D.碘酒"],
+                answer: "B",
+                explanation: "无水酒精不适合灭菌。"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        const questionContainer = document.getElementById('question-container');
+        const submitButton = document.getElementById('submit-button');
+        const nextButton = document.getElementById('next-button');
+        const answerContainer = document.getElementById('answer-container');
+        const trophyImg = document.getElementById('trophy-img');
+
+        function showQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const question = questions[currentQuestionIndex];
+                let optionsHtml = question.options.map((option, index) => {
+                    let optionValue = String.fromCharCode(65 + index);
+                    return `
+                            <div class="option">
+                                <input type="radio" name="answer" value="${optionValue}" id="option-${optionValue}">
+                                <label for="option-${optionValue}">${option}</label>
+                            </div>
+                        `;
+                }).join('');
+                questionContainer.innerHTML = `<p>${question.question}</p>${optionsHtml}`;
+                submitButton.disabled = false;
+                nextButton.disabled = true;
+            } else {
+                showTrophy();
+            }
+        }
+
+        function checkAnswer() {
+            const selectedAnswer = document.querySelector('input[name="answer"]:checked');
+            if (!selectedAnswer) return;
+
+            const question = questions[currentQuestionIndex];
+            if (selectedAnswer.value === question.answer) {
+                answerContainer.innerHTML = `<p>回答正确！</p><p>解析：${question.explanation}</p>`;
+            } else {
+                answerContainer.innerHTML = `<p>回答错误！</p><p>正确答案是：${question.answer}</p><p>解析：${question.explanation}</p>`;
+            }
+            answerContainer.style.display = 'block';
+            submitButton.disabled = true;
+            nextButton.disabled = false;
+        }
+
+        function goToNextQuestion() {
+            currentQuestionIndex++;
+            answerContainer.style.display = 'none';
+            showQuestion();
+        }
+
+        function showTrophy() {
+            questionContainer.innerHTML = `<h2>你已完成所有问题！</h2>`;
+            trophyImg.style.display = 'block';
+        }
+
+        submitButton.addEventListener('click', checkAnswer);
+        nextButton.addEventListener('click', goToNextQuestion);
+        window.onload = showQuestion;
+    </script>
+
+</body>
+</html>
